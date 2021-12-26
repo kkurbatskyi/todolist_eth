@@ -3,8 +3,11 @@ const { assert } = require("chai")
 const TodoList = artifacts.require('./TodoList.sol')
 
 contract('TodoList', (accounts) => {
+
     before(async () => {
-        this.todoList = await TodoList.deployed()
+        this.todoList = await TodoList.deployed();
+        console.log(this.address);
+        await this.todoList.createTask('Complete the first task');
     })
 
     it('deploys successfully', async () => {
@@ -18,6 +21,7 @@ contract('TodoList', (accounts) => {
     it('lists tasks', async () => {
         const taskCount = await this.todoList.taskCount()
         const task = await this.todoList.tasks(taskCount)
+        console.log(taskCount);
         assert.equal(task.id.toNumber(), taskCount.toNumber())
         assert.equal(task.content, 'Complete the first task')
         assert.equal(task.completed, false)
@@ -28,7 +32,6 @@ contract('TodoList', (accounts) => {
         const result  = await this.todoList.createTask('A new task');
         const taskCount = await this.todoList.taskCount();
         assert.equal(taskCount, 2);
-console.log(result);
         const event = result.logs[0].args;
         assert.equal(event.id.toNumber(), 2);
         assert.equal(event.content, 'A new task');

@@ -2,11 +2,17 @@
 pragma solidity ^0.5.0;
 
 contract TodoList{
-    uint8 public taskCount = 0;
+
+    mapping (address => User) public users;
 
     event TaskCreated(uint id, string content, bool completed);
     event TaskCompleted(uint id, bool completed);
-
+    
+    
+    struct User{
+        uint8 taskCount;
+        mapping(uint8 => Task) tasks;
+    }
 
     struct Task{
         uint8 id;
@@ -14,22 +20,33 @@ contract TodoList{
         bool completed;
     }
 
-    mapping(uint8 => Task) public tasks;
+    function taskCount() external view returns (uint8){
+        uint8 _taskCount = users[msg.sender].taskCount;
+        return _taskCount;
+    }
 
-    constructor() public{
-        createTask("Complete the first task");
+    function tasks(uint8 _id) external view returns (uint8 id, string memory content, bool completed){
+        User storage _user = users[msg.sender];
+        Task memory _task = _user.tasks[_id];
+        return (_task.id, _task.content, _task.completed);
     }
 
     function createTask(string memory _content) public{
-        taskCount++;
-        tasks[taskCount] = Task(taskCount, _content, false);
-        emit TaskCreated(taskCount, _content, false);
+        users[msg.sender].taskCount++;
+        User storage _user = users[msg.sender];
+        Task memory _task = _user.tasks[_user.taskCount];
+        _task = Task(_user.taskCount, _content, false);
+        _user.tasks[_user.taskCount] = _task;
+        users[msg.sender] = _user;
+        emit TaskCreated(_user.taskCount, _content, false);
     }
 
     function toggleCompleted(uint8 _id) public{
-        Task memory _task = tasks[_id];
+        User storage _user = users[msg.sender];
+        Task memory _task = _user.tasks[_id];
         _task.completed = !_task.completed;
-        tasks[_id] = _task;
+        _user.tasks[_id] = _task;
+        users[msg.sender] = _user;
         emit TaskCompleted(_id, _task.completed);
     }
 }
